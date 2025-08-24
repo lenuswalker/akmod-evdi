@@ -6,6 +6,16 @@ License:        GPL-2.0-only AND MIT
 URL:            https://github.com/DisplayLink/evdi
 Source0:        https://github.com/DisplayLink/evdi/archive/refs/tags/v%{version}.tar.gz#/evdi-%{version}.tar.gz
 
+# ---- important: make this a source-only, noarch package; disable debuginfo/debugsource
+BuildArch:      noarch
+%global debug_package %{nil}
+%undefine _package_debug
+%undefine _build_id_links
+%undefine _missing_build_ids_terminate_build
+%undefine _debuginfo
+%undefine _debugsource_packages
+# ----------------------------------------------------------------------
+
 BuildRequires:  akmods
 BuildRequires:  gcc, make
 Requires:       akmods
@@ -43,4 +53,9 @@ SH
 chmod +x %{buildroot}/usr/src/akmods/evdi-%{version}/kmodtool-extra.sh
 
 %files
-/usr/src/akmods/evdi-%{version}
+%dir /usr/src/akmods/evdi-%{version}
+/usr/src/akmods/evdi-%{version}/*
+
+%changelog
+* Sun Aug 24 2025 Lenus Walker <lenus@onyxtechnologies.co> - 1.14.10-1
+- Initial source-only akmods packaging for evdi (noarch). Disable debuginfo/debugsource.
