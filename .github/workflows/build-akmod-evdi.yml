@@ -63,15 +63,17 @@ jobs:
 
       - name: Unpack EVDI source
         run: |
-          mkdir -p /tmp/evdi
-          tar -xf /tmp/evdi-src/evdi-${EVDI_VER}.tar.gz -C /tmp/evdi --strip-components=0
-          echo "Source at /tmp/evdi/evdi-${EVDI_VER}"
+          mkdir -p /tmp/evdi/src
+          # The upstream tarball is evdi-${EVDI_VER}/... -> drop the top-level dir
+          tar -xzf /tmp/evdi-src/evdi-${EVDI_VER}.tar.gz -C /tmp/evdi/src --strip-components=1
+          test -f /tmp/evdi/src/Makefile || (echo "Unexpected tar layout"; ls -la /tmp/evdi/src; exit 1)
 
       - name: Compile evdi.ko against ${KVER}
-        working-directory: /tmp/evdi/evdi-${EVDI_VER}
+        working-directory: /tmp/evdi/src
         run: |
-          make -C /usr/src/kernels/$KVER M=$PWD/module modules
-          test -f module/evdi.ko || (echo "Build produced no evdi.ko" && exit 1)
+          echo "Using kernel headers at /usr/src/kernels/${KVER}"
+          make -C /usr/src/kernels/${KVER} M=$PWD/module modules
+          test -f module/evdi.ko || (echo "Build produced no evdi.ko"; exit 1)
 
       - name: Upload built evdi.ko (proof)
         uses: actions/upload-artifact@v4
