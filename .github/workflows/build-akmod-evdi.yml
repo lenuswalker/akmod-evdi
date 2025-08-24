@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: evdi-ko-${{ env.KVER }}
-          path: /tmp/evdi/evdi-${{ env.EVDI_VER }}/module/evdi.ko
+          path: /tmp/evdi/src/module/evdi.ko
 
   release:
     needs: [build, compile-test]   # only release if compile test passed
