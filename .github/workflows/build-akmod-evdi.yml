@@ -1,6 +1,10 @@
 name: build-akmod-evdi
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "v1.14.10"
+        required: true
   push:
     tags:
       - "v*"
@@ -19,6 +23,8 @@ jobs:
       image: fedora:42
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install build deps
         run: |
           dnf -y install kernel-$KREL rpmdevtools @development-tools akmods \
@@ -85,6 +91,17 @@ jobs:
     needs: [build, compile-test]   # only release if compile test passed
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Create the tag if this run was manual (no tag ref present)
+      - name: Create tag for manual runs
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ inputs.tag }}" -m "akmod-evdi ${{ inputs.tag }}"
+          git push origin "${{ inputs.tag }}"
       - uses: actions/download-artifact@v4
         with:
           name: akmod-evdi-rpms
