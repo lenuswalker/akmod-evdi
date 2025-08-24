@@ -1,0 +1,93 @@
+name: build-akmod-evdi
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+env:
+  # Your target Fedora 42 kernel
+  KVER: "6.15.10-200.fc42.x86_64"
+  KREL: "6.15.10-200.fc42"   # same as KVER without the arch suffix
+  # EVDI version tag (matches your spec)
+  EVDI_VER: "1.14.10"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:42
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build deps
+        run: |
+          dnf -y install rpmdevtools @development-tools akmods \
+                     fedpkg mock spectool make gcc curl git
+      - name: Setup rpmbuild tree
+        run: |
+          rpmdev-setuptree
+          cp -v SPECS/akmod-evdi.spec ~/rpmbuild/SPECS/
+          spectool -g -R ~/rpmbuild/SPECS/akmod-evdi.spec
+      - name: Build noarch akmod RPM
+        run: rpmbuild -bb ~/rpmbuild/SPECS/akmod-evdi.spec
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: akmod-evdi-rpms
+          path: ~/rpmbuild/RPMS/noarch/*.rpm
+      - name: Upload source tarball (for test job)
+        uses: actions/upload-artifact@v4
+        with:
+          name: evdi-source
+          path: ~/rpmbuild/SOURCES/evdi-${{ env.EVDI_VER }}.tar.gz
+
+  # Compile test against the exact kernel headers you care about
+  compile-test:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:42
+    steps:
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: evdi-source
+          path: /tmp/evdi-src
+
+      - name: Install exact kernel-devel and build deps
+        run: |
+          dnf -y install "kernel-devel = $KREL" kernel-headers \
+                         gcc make elfutils-libelf-devel
+          ls -la /usr/src/kernels || true
+          test -d "/usr/src/kernels/$KVER" || (echo "Missing /usr/src/kernels/$KVER" && exit 1)
+
+      - name: Unpack EVDI source
+        run: |
+          mkdir -p /tmp/evdi
+          tar -xf /tmp/evdi-src/evdi-${EVDI_VER}.tar.gz -C /tmp/evdi --strip-components=0
+          echo "Source at /tmp/evdi/evdi-${EVDI_VER}"
+
+      - name: Compile evdi.ko against ${KVER}
+        working-directory: /tmp/evdi/evdi-${EVDI_VER}
+        run: |
+          make -C /usr/src/kernels/$KVER M=$PWD/module modules
+          test -f module/evdi.ko || (echo "Build produced no evdi.ko" && exit 1)
+
+      - name: Upload built evdi.ko (proof)
+        uses: actions/upload-artifact@v4
+        with:
+          name: evdi-ko-${{ env.KVER }}
+          path: /tmp/evdi/evdi-${{ env.EVDI_VER }}/module/evdi.ko
+
+  release:
+    needs: [build, compile-test]   # only release if compile test passed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: akmod-evdi-rpms
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.rpm
+          generate_release_notes: true
