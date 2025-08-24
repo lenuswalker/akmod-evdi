@@ -56,7 +56,7 @@ jobs:
 
       - name: Install exact kernel-devel and build deps
         run: |
-          dnf -y install kernel-$KREL "kernel-devel = $KREL" kernel-headers-$KREL \
+          dnf -y install kernel-$KREL "kernel-devel = $KREL" kernel-headers \
                          gcc make elfutils-libelf-devel
           ls -la /usr/src/kernels || true
           test -d "/usr/src/kernels/$KVER" || (echo "Missing /usr/src/kernels/$KVER" && exit 1)
