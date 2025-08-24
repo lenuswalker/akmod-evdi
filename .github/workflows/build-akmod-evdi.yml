@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "v1.14.10"
+        description: "Release tag (e.g., v1.14.10)"
         required: true
   push:
     tags:
