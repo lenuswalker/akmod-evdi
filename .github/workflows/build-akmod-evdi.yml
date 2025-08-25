@@ -39,6 +39,12 @@ jobs:
           spectool -g -R ~/rpmbuild/SPECS/akmod-evdi.spec
       - name: Build noarch akmod RPM
         run: rpmbuild -bb ~/rpmbuild/SPECS/akmod-evdi.spec
+      - name: Verify akmod payload
+        run: |
+          rpm -qlp ~/rpmbuild/RPMS/noarch/akmod-evdi-*.noarch.rpm | sed -n 's|^/usr/src/akmods/||p'
+          # Expect:
+          #   evdi-kmod-1.14.10-2.fc42.src.rpm
+          #   evdi-kmod.src.rpm
       - name: Upload RPM artifact
         uses: actions/upload-artifact@v4
         with:
