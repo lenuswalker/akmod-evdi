@@ -34,6 +34,7 @@ jobs:
                      fedpkg mock spectool make gcc curl git
       - name: Setup rpmbuild tree
         run: |
+          rm -rf ~/rpmbuild
           rpmdev-setuptree
           cp -v SPECS/akmod-evdi.spec ~/rpmbuild/SPECS/
           spectool -g -R ~/rpmbuild/SPECS/akmod-evdi.spec
