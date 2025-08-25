@@ -5,8 +5,8 @@ Summary:        Akmods package for the EVDI (DisplayLink) kernel module
 License:        GPL-2.0-only AND MIT
 URL:            https://github.com/DisplayLink/evdi
 Source0:        https://github.com/DisplayLink/evdi/archive/refs/tags/v%{version}.tar.gz#/evdi-%{version}.tar.gz
-Patch0:         https://github.com/DisplayLink/evdi/commit/ae34f70a02552b41697ba753323427281e977e17.patch
-Patch1:         https://github.com/DisplayLink/evdi/commit/3673a4b34d386921fc323ddbd2ef0e000022e2d4.patch
+# Patch0:         https://github.com/DisplayLink/evdi/commit/ae34f70a02552b41697ba753323427281e977e17.patch
+# Patch1:         https://github.com/DisplayLink/evdi/commit/3673a4b34d386921fc323ddbd2ef0e000022e2d4.patch
 
 # ---- important: make this a source-only, noarch package; disable debuginfo/debugsource
 BuildArch:      noarch
